@@ -2,7 +2,7 @@
   <gupdate xmlns="http://www.google.com/update2/response" protocol="2.0">
     <app appid="llodpmdfagolambfoplfgfdcipkdkhng">
       <updatecheck
-        codebase="https://nxtsuki.github.io/beauty_backlog/updates/crx/crm-context-filter-1.0.0.crx"
+        codebase="https://nxtsuki.github.io/backlog/updates/crm-context-filter-1.0.0.crx"
         version="1.0.0" />
     </app>
   </gupdate>
