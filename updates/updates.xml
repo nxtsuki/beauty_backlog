@@ -3,6 +3,6 @@
     <app appid="flohcohlndmibdjdkhmefofjckihpgmf">
       <updatecheck
         codebase="https://nxtsuki.github.io/backlog/updates/crm-context-filter_1.0.0.crx"
-        version="1.0.0" />
+        version="1.0.1" />
     </app>
   </gupdate>
