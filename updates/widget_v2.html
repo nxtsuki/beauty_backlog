@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excaliburmobile — Template Panel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: monospace; background: #fff; padding: 1rem; }
+.panel { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1px; background: #e5e7eb; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.col { background: #fff; padding: 14px 14px 16px; }
+.col-title { font-size: 12px; font-weight: 600; color: #111; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; font-family: sans-serif; }
+.btn-row { display: flex; flex-direction: column; gap: 2px; }
+.btn { display: block; width: 100%; text-align: left; font-size: 12px; font-family: monospace; color: #6b7280; padding: 5px 8px; border-radius: 5px; border: none; background: transparent; cursor: pointer; transition: background 0.1s, color 0.1s; }
+.btn:hover { background: #f3f4f6; color: #111; }
+.btn:active { transform: scale(0.97); }
+.tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; float: right; margin-top: 2px; font-family: sans-serif; }
+.it  { background: #e6f4ec; color: #1a6636; }
+.en  { background: #e6eef8; color: #1a3a6b; }
+.fwd { background: #f3f4f6; color: #6b7280; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #111; color: #fff; border-radius: 6px; padding: 8px 16px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="panel" id="panel"></div>
+<div id="toast"></div>
+<script>
+function copy(text, label) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.top = "0";
+  ta.style.left = "0";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand("copy"); } catch(e) {}
+  document.body.removeChild(ta);
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).catch(function(){});
+  }
+  var t = document.getElementById("toast");
+  t.textContent = "\u2713 copiato: " + label;
+  t.style.opacity = "1";
+  clearTimeout(window._tt);
+  window._tt = setTimeout(function(){ t.style.opacity = "0"; }, 1800);
+}
+
+var COLS = [
+  { title: "Attivazione SIM", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer l'attivazione della SIM Le chiediamo:\n\u2022 Carta d'identit\u00e0 / passaporto / patente (F+R)\n\u2022 Codice fiscale\n\u2022 Modulo \"Richiesta ed Attivazione Carta SIM\"\n\u2022 Foto SIM con ICCID / email eSIM\n\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nTo activate your SIM please send us:\n\u2022 ID / passport / driving licence (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 \"SIM Request and Activation\" form\n\u2022 Photo of SIM with ICCID / email for eSIM\n\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "reclami@Excaliburmobile.it", tag: "fwd", copy: "reclami@Excaliburmobile.it" }
+  ]},
+  { title: "Registrazione errata", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer correggere i dati di registrazione Le chiediamo:\n\u2022 Carta d'identit\u00e0 / passaporto / patente (F+R)\n\u2022 Codice fiscale\n\u2022 Foto SIM con ICCID / email eSIM\n\u2022 Breve spiegazione delle correzioni richieste\n\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nTo correct your registration details please send:\n\u2022 ID / passport / driving licence (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 Photo of SIM with ICCID / eSIM email\n\u2022 Brief explanation of the corrections needed\n\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "reclami@Excaliburmobile.it", tag: "fwd", copy: "reclami@Excaliburmobile.it" }
+  ]},
+  { title: "Portabilit\u00e0 IN", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer la portabilit\u00e0 del numero Le chiediamo:\n\u2022 Carta d'identit\u00e0 / passaporto / patente (F+R)\n\u2022 Codice fiscale\n\u2022 Modulo \"Portabilit\u00e0 del numero\"\n\u2022 Foto SIM ICCID - operatore attuale\n\u2022 Foto SIM ICCID - nuovo numero Excalibur\n\nInvii a reclami@Excaliburmobile.it\nCompletata entro 24h lavorative dalla conferma OTP.\nCredito residuo: meno di 119,99 euro = 2gg | 120 euro o piu = 6gg\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nTo port your number please send us:\n\u2022 ID / passport / driving licence (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 \"Number Portability\" form\n\u2022 Photo SIM ICCID - current operator\n\u2022 Photo SIM ICCID - new Excalibur number\n\nSend to reclami@Excaliburmobile.it\nCompleted within 24 working hours after OTP confirmation.\nRemaining credit: below 119.99 EUR = 2 days | 120 EUR or more = 6 days\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "elisabetta.a@universalservice.it", tag: "fwd", copy: "elisabetta.a@universalservice.it" },
+    { label: "sohan.fernando@ (CC)", tag: "fwd", copy: "sohan.fernando@universalservice.it" }
+  ]},
+  { title: "Portabilit\u00e0 OUT", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nAbbiamo inoltrato la sua richiesta di portabilit\u00e0 in uscita al team dedicato.\n\nCi fornisca:\n\u2022 Numero di telefono interessato\n\u2022 Eventuale codice di migrazione\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nWe have forwarded your port-out request to our dedicated team.\n\nPlease provide:\n\u2022 Phone number to be ported\n\u2022 Migration code (if available)\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "mnpdesk@Excaliburmobile.it", tag: "fwd", copy: "mnpdesk@Excaliburmobile.it" }
+  ]},
+  { title: "Disattivazione SIM", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer la disattivazione SIM Le chiediamo:\n\u2022 Carta d'identit\u00e0 / passaporto / patente (F+R)\n\u2022 Codice fiscale\n\u2022 Modulo \"Recesso dal contratto e rimborso credito residuo\"\n\u2022 Foto SIM con ICCID\n\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nTo deactivate your SIM please send us:\n\u2022 ID / passport / driving licence (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 \"Contract termination and credit refund\" form\n\u2022 Photo of SIM with ICCID\n\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "Nic.Deo@Excaliburmobile.com", tag: "fwd", copy: "Nic.Deo@Excaliburmobile.com" },
+    { label: "servicedesk@ (CC)", tag: "fwd", copy: "servicedesk@Excaliburtech.com" },
+    { label: "ito-serviceops@ (CC)", tag: "fwd", copy: "ito-serviceops@Excaliburtech.com" }
+  ]},
+  { title: "SIM Swap", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer la sostituzione SIM (Swap) Le chiediamo:\n\u2022 Carta d'identit\u00e0 / passaporto / patente (F+R)\n\u2022 Codice fiscale\n\u2022 ICCID SIM attuale (vecchia)\n\u2022 ICCID nuova SIM\n\u2022 Denuncia (se smarrita/rubata)\n\nEntrambi i numeri devono avere gli stessi dati anagrafici.\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nFor the SIM Swap please send us:\n\u2022 ID / passport / driving licence (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 ICCID of current (old) SIM\n\u2022 ICCID of new SIM\n\u2022 Police report (if lost/stolen)\n\nBoth numbers must share the same personal details.\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "reclami@Excaliburmobile.it", tag: "fwd", copy: "reclami@Excaliburmobile.it" },
+    { label: "CSbackoffice@ (ritardi)", tag: "fwd", copy: "CSbackoffice@Excaliburtel.com" },
+    { label: "Mohammed.Hanifa@ (CC)", tag: "fwd", copy: "Mohammed.Hanifa@Excaliburtelindia.in" }
+  ]},
+  { title: "Rimborso", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer il rimborso Le chiediamo:\n\u2022 Numero MFST\n\u2022 Numero ordine (ORD...)\n\u2022 ICCID e PUK della SIM/eSIM\n\u2022 Nome offerta + importo (euro)\n\u2022 Carta d'identit\u00e0 / passaporto (F+R)\n\u2022 Codice fiscale\n\u2022 Email usata per l'ordine\n\u2022 Data dell'ordine\n\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nFor the refund please send us:\n\u2022 MFST number\n\u2022 Order number (ORD...)\n\u2022 ICCID and PUK of SIM/eSIM\n\u2022 Offer name + amount (EUR)\n\u2022 ID / passport (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 Email used for the order\n\u2022 Order date\n\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "approvalrequests@ (1)", tag: "fwd", copy: "approvalrequests@Excaliburtel.com" },
+    { label: "refundrequest@ (2)", tag: "fwd", copy: "refundrequest@Excaliburtelindia.in" }
+  ]},
+  { title: "Blocco SIM", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer lo sblocco SIM Le chiediamo:\n\u2022 Carta d'identit\u00e0 / passaporto / patente (F+R)\n\u2022 Codice fiscale\n\u2022 Foto SIM con ICCID\n\u2022 Breve spiegazione scritta del motivo\n\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nTo unblock your SIM please send us:\n\u2022 ID / passport / driving licence (front & back)\n\u2022 Tax code (Codice Fiscale)\n\u2022 Photo of SIM with ICCID\n\u2022 Brief written explanation of the reason\n\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "ra@Excaliburmobile.com", tag: "fwd", copy: "ra@Excaliburmobile.com" },
+    { label: "fmra@ (CC)", tag: "fwd", copy: "fmra@Excaliburmobile.com" }
+  ]},
+  { title: "Problemi rete / SIM", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nCi scusiamo per il disagio. Abbiamo aperto un ticket tecnico per il problema segnalato.\n\nNel frattempo Le consigliamo:\n\u2022 Riavviare il dispositivo\n\u2022 Verificare che la SIM sia inserita correttamente\n\u2022 Controllare che i dati mobili siano attivi\n\n40322 (gratuito) | 06 45 21 2322 - Lun-Sab 8:30-21:30\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nWe apologise for the inconvenience. We have opened a technical ticket.\n\nIn the meantime please try:\n\u2022 Restarting your device\n\u2022 Checking the SIM is correctly inserted\n\u2022 Enabling mobile data in your settings\n\n+39 06 45 21 2322 - Mon-Sat 8:30-21:30\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "servicedesk@Excaliburtech.com", tag: "fwd", copy: "servicedesk@Excaliburtech.com" }
+  ]},
+  { title: "Cambio intestatario", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer il cambio intestatario SIM servono documenti di entrambe le parti:\n\u2022 Modulo \"Cambio intestatario SIM\" (firmato da entrambi)\n\u2022 Carta d'identit\u00e0 di entrambi (F+R)\n\u2022 Codice fiscale di entrambi\n\u2022 Foto SIM con ICCID / email eSIM\n\nIl titolare attuale ricever\u00e0 una chiamata dal back office per confermare.\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nFor the SIM ownership transfer we need documents from both parties:\n\u2022 \"Change of SIM Holder\" form (signed by both)\n\u2022 ID of both clients (front & back)\n\u2022 Tax code of both\n\u2022 Photo SIM with ICCID / eSIM email\n\nThe current holder will receive a call from back office to confirm.\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "lmit@Excaliburtelindia.in", tag: "fwd", copy: "lmit@Excaliburtelindia.in" },
+    { label: "arul.jothi@ (CC)", tag: "fwd", copy: "arul.jothi@Excaliburtelindia.in" }
+  ]},
+  { title: "Stato ordine", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer verificare il suo ordine Le chiediamo:\n\u2022 Numero ordine (ORDB...)\n\u2022 ID transazione (IT...)\n\u2022 Numero MFST\n\u2022 Nome dell'offerta acquistata\n\nInvii a reclami@Excaliburmobile.it\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nTo check your order status please provide:\n\u2022 Order number (ORDB...)\n\u2022 Transaction ID (IT...)\n\u2022 MFST number\n\u2022 Name of the purchased offer\n\nSend to reclami@Excaliburmobile.it\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "sohan.fernando@universalservice.it", tag: "fwd", copy: "sohan.fernando@universalservice.it" }
+  ]},
+  { title: "Richiesta Autorit\u00e0", items: [
+    { label: "Mail IT", tag: "it", copy: "La comunicazione \u00e8 stata ricevuta e sar\u00e0 inoltrata all'ufficio legale competente per la gestione secondo le procedure previste dalla normativa vigente.\n\nAssistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "This communication has been received and will be forwarded to Excaliburmobile's legal department for handling in accordance with applicable regulations.\n\nExcaliburmobile Customer Support" },
+    { label: "infodati@Excaliburmobile.it", tag: "fwd", copy: "infodati@Excaliburmobile.it" }
+  ]},
+  { title: "Fattura / Estratto conto", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nAbbiamo ricevuto la sua richiesta e aperto un ticket (Itemised billing enquiry - Billing statement PDF).\n\nRicever\u00e0 il documento via email a breve.\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nWe have received your request and opened a ticket (Itemised billing enquiry - Billing statement PDF).\n\nYou will receive the document by email shortly.\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "Mohammed.Hanifa@ (urgenze)", tag: "fwd", copy: "Mohammed.Hanifa@Excaliburtelindia.in" }
+  ]},
+  { title: "Voucher graffiato", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nPer il voucher La preghiamo di inviarci a reclami@Excaliburmobile.it:\n\u2022 Foto del voucher con numero seriale completo\n\u2022 Le cifre del PIN che riesce a leggere\n\nNota: con meno di 3 cifre consecutive la soluzione non e' garantita.\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nFor the voucher please send us at reclami@Excaliburmobile.it:\n\u2022 Photo of the voucher showing the full serial number\n\u2022 The PIN digits you can read\n\nNote: with fewer than 3 consecutive digits a solution cannot be guaranteed.\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "reclami@Excaliburmobile.it", tag: "fwd", copy: "reclami@Excaliburmobile.it" }
+  ]},
+  { title: "Generico / Altro", items: [
+    { label: "Mail IT", tag: "it", copy: "Gentile Cliente,\n\nLa ringraziamo per aver contattato il Servizio Clienti Excaliburmobile e ci scusiamo per il ritardo.\n\nAbbiamo preso in carico la sua richiesta. Un nostro operatore la contatter\u00e0 nel pi\u00f9 breve tempo possibile.\n\n40322 (gratuito) | 06 45 21 2322 - Lun-Sab 8:30-21:30\n\nCordiali Saluti,\n[NOME] - Assistenza Clienti Excaliburmobile" },
+    { label: "Mail EN", tag: "en", copy: "Dear Customer,\n\nThank you for contacting Excaliburmobile Customer Service. We apologise for the delay.\n\nWe have received your request and one of our agents will get back to you as soon as possible.\n\n+39 06 45 21 2322 - Mon-Sat 8:30-21:30\n\nKind regards,\n[NAME] - Excaliburmobile Customer Support" },
+    { label: "reclami@Excaliburmobile.it", tag: "fwd", copy: "reclami@Excaliburmobile.it" }
+  ]}
+];
+
+document.getElementById("panel").innerHTML = COLS.map(function(col) {
+  return '<div class="col"><div class="col-title">' + col.title + '</div><div class="btn-row">' +
+    col.items.map(function(item) {
+      var badge = item.tag === "it" ? "IT" : item.tag === "en" ? "EN" : "\u2192";
+      return '<button class="btn" onclick="copy(' + JSON.stringify(item.copy) + ',' + JSON.stringify(item.label) + ')">' +
+        item.label + '<span class="tag ' + item.tag + '">' + badge + '</span></button>';
+    }).join("") +
+  '</div></div>';
+}).join("");
+</script>
+</body>
+</html>
